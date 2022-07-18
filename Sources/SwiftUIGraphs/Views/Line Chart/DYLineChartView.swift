@@ -274,6 +274,20 @@ public struct DYLineChartView: View, DYGridChart {
       }
  
     }
+
+    private func annotation()->some View {
+        GeometryReader { geo in
+            Group {
+                if self.dataPoints.count >= 2 {
+                    self.pathFor(width: geo.size.width - marginSum, height: geo.size.height, closeShape: false)
+                            .trim(from: 0, to: self.lineEnd)
+                            .stroke(style: (self.settings as! DYLineChartSettings).lineStrokeStyle)
+                            .foregroundColor((self.settings as! DYLineChartSettings).lineColor)
+                }
+            }
+        }
+
+    }
     
     // for separate
     private func lineSegments()-> some View {
