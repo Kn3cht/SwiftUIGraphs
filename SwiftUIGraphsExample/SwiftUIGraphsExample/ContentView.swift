@@ -22,9 +22,9 @@ struct ContentView: View {
                     Text("Line Charts")
                 }) {
                     NavigationLink("Weight Lifting Volume per Workout", destination: BasicLineChartExample())
-                    NavigationLink("Multi Line Chart Example", destination: MultiLineChartExample())
+                    NavigationLink("Multi Line Chart Example", destination: MultiLineChartExample(), isActive: $linkActive)
                     NavigationLink("Stock Prices (asyn data fetch)", destination: LineChartWithAsyncDataFetch())
-                    NavigationLink("Workout Time per Week", destination: CustomYAxisIntervalExampleLineChart(), isActive: $linkActive)
+                    NavigationLink("Workout Time per Week", destination: CustomYAxisIntervalExampleLineChart())
                 }
                 
                 Section(header: HStack{
