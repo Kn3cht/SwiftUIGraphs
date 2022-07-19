@@ -26,6 +26,7 @@ struct MultiLineChartExample: View {
                                         axisIdentifier: "axis1"
                                 )
                             ],
+                                xAxisSettings: DYLineChartXAxisSettings(showXAxis: true, xAxisInterval: 604800, xAxisFontSize: fontSize),
                             groupSettings: [
                                 DYGroupSettings(
                                     id: "group0",

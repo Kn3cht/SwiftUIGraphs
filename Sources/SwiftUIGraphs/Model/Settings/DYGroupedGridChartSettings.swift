@@ -25,6 +25,8 @@ public struct DYMultiLineChartSettings: DYGroupedGridChartSettings {
     public var chartViewBackgroundColor: Color
     public var lateralPadding: (leading: CGFloat, trailing: CGFloat)
     public var labelViewDefaultOffset: CGSize
+    public var chartFrameHeight: CGFloat?
+
     public var showAnimation: Bool
 
     public var yAxesSettings: [YAxisSettings]
@@ -38,6 +40,7 @@ public struct DYMultiLineChartSettings: DYGroupedGridChartSettings {
         lateralPadding: (leading: CGFloat, trailing: CGFloat) = (0, 0),
         labelViewDefaultOffset: CGSize = CGSize(width: 0, height: -12),
         showAnimation: Bool = true,
+        chartFrameHeight: CGFloat? = nil,
         yAxesSettings: [YAxisSettings] = [],
         xAxisSettings: DYLineChartXAxisSettings = DYLineChartXAxisSettings(),
         groupSettings: [DYGroupSettings] = []
@@ -49,5 +52,6 @@ public struct DYMultiLineChartSettings: DYGroupedGridChartSettings {
         self.yAxesSettings = yAxesSettings
         self.xAxisSettings = xAxisSettings
         self.groupSettings = groupSettings
+        self.chartFrameHeight = chartFrameHeight
     }
 }
