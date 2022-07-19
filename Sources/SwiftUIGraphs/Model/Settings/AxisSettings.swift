@@ -84,6 +84,7 @@ public protocol XAxisSettings {
 
 public struct YAxisSettings {
     
+    var axisIdentifier: String?
     var showYAxis: Bool
     var yAxisPosition: Edge.Set
     var yAxisViewWidth: CGFloat
@@ -104,6 +105,7 @@ public struct YAxisSettings {
     
     /// YAxisSettings
     /// - Parameters:
+    ///   - axisIdentifier: optional identifier for y axes used to be referenced to in multi line charts
     ///   - showYAxis: determines if the y-axis should be shown.
     ///   - yAxisPosition: y-axis position. can be leading or trailing.
     ///   - yAxisViewWidth: width of the y-axis view. Adjust if the y-axis labels don't fit.
@@ -118,8 +120,23 @@ public struct YAxisSettings {
     ///  - yAxisFontSize: font size of the y-axis marker labels.
     ///  - yAxisMinMaxOverride: override the max and min values of the y-axis. if not set, the min and max value will be calculated automatically.
     ///   - yAxisIntervalOverride: override the interval of the y-axis values. If not set, the interval will be calculated automatically.
-    public init(showYAxis: Bool = true, yAxisPosition: Edge.Set = .leading, yAxisViewWidth: CGFloat = 35, showYAxisGridLines: Bool = true, yAxisGridLineStrokeStyle: StrokeStyle = StrokeStyle(lineWidth: 1, dash: [3]), showYAxisDataPointLines: Bool = false, yAxisDataPointLinesStrokeStyle: StrokeStyle  = StrokeStyle(lineWidth: 1, dash: [3]), yAxisDataPointLinesColor: Color = .green, showYAxisSelectedDataPointLine: Bool = false, yAxisSelectedDataPointLineStrokeStyle: StrokeStyle = StrokeStyle(lineWidth: 2, dash: [3]),  yAxisSelectedDataPointLineColor: Color = .orange,  yAxisFontSize: CGFloat = 8, yAxisMinMaxOverride: (min:Double?, max:Double?)? = nil, yAxisIntervalOverride: Double? = nil) {
-        
+    public init(
+            axisIdentifier: String? = nil,
+            showYAxis: Bool = true,
+            yAxisPosition: Edge.Set = .leading,
+            yAxisViewWidth: CGFloat = 35,
+            showYAxisGridLines: Bool = true,
+            yAxisGridLineStrokeStyle: StrokeStyle = StrokeStyle(lineWidth: 1, dash: [3]),
+            showYAxisDataPointLines: Bool = false,
+            yAxisDataPointLinesStrokeStyle: StrokeStyle  = StrokeStyle(lineWidth: 1, dash: [3]),
+            yAxisDataPointLinesColor: Color = .green, showYAxisSelectedDataPointLine: Bool = false,
+            yAxisSelectedDataPointLineStrokeStyle: StrokeStyle = StrokeStyle(lineWidth: 2, dash: [3]),
+            yAxisSelectedDataPointLineColor: Color = .orange,
+            yAxisFontSize: CGFloat = 8,
+            yAxisMinMaxOverride: (min:Double?, max:Double?)? = nil,
+            yAxisIntervalOverride: Double? = nil
+    ) {
+        self.axisIdentifier = axisIdentifier
         self.showYAxis = showYAxis
         self.yAxisPosition = yAxisPosition
         self.yAxisViewWidth = yAxisViewWidth

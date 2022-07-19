@@ -80,20 +80,60 @@ public struct DYDataPoint: Identifiable {
         return dataPoints
     }
 
+    public static var exampleData3: [DYDataPoint] {
+        var dataPoints:[DYDataPoint] = []
+
+        var endDate = Date().add(units: -3, component: .hour)
+
+        for _ in 0..<20 {
+            let yValue = Int.random(in: 10 ..< 120)
+
+            let xValue =  endDate.timeIntervalSinceReferenceDate
+            let dataPoint = DYDataPoint(xValue: xValue, yValue: Double(yValue))
+            dataPoints.append(dataPoint)
+            let randomDayDifference = Int.random(in: 1 ..< 8)
+            endDate = endDate.add(units: -randomDayDifference, component: .day)
+        }
+
+        return dataPoints
+    }
+
+    public static var exampleData4: [DYDataPoint] {
+        var dataPoints:[DYDataPoint] = []
+
+        var endDate = Date().add(units: -3, component: .hour)
+
+        for _ in 0..<20 {
+            let yValue = Int.random(in: 6000 ..< 12000)
+
+            let xValue =  endDate.timeIntervalSinceReferenceDate
+            let dataPoint = DYDataPoint(xValue: xValue, yValue: Double(yValue))
+            dataPoints.append(dataPoint)
+            let randomDayDifference = Int.random(in: 1 ..< 8)
+            endDate = endDate.add(units: -randomDayDifference, component: .day)
+        }
+
+        return dataPoints
+    }
+
     public static var groupedExampleData: [DYDataPoint] {
-        let groupedData0 = exampleData0
-        let groupedData1 = exampleData1
+        let groupedData3 = exampleData3
+        let groupedData4 = exampleData4
 
         var exampleData: [DYDataPoint] = []
-        groupedData0.forEach({ dp in
+        groupedData3.forEach({ dp in
             let dataPoint = DYDataPoint(xValue: dp.xValue, yValue: Double(dp.yValue), group: "group0")
 
             exampleData.append(dataPoint)
         })
-        groupedData1.forEach({ dp in
+        groupedData4.forEach({ dp in
             let dataPoint = DYDataPoint(xValue: dp.xValue, yValue: Double(dp.yValue), group: "group1")
 
             exampleData.append(dataPoint)
+        })
+
+        exampleData.sort(by: { (dp1, dp2) in
+            dp1.xValue < dp2.xValue
         })
 
         return exampleData
