@@ -39,7 +39,7 @@ public struct DYMultiLineChartSettings: DYGroupedGridChartSettings {
         labelViewDefaultOffset: CGSize = CGSize(width: 0, height: -12),
         showAnimation: Bool = true,
         yAxesSettings: [YAxisSettings] = [],
-        xAxisSettings: DYBarChartXAxisSettings = DYBarChartXAxisSettings(),
+        xAxisSettings: DYLineChartXAxisSettings = DYLineChartXAxisSettings(),
         groupSettings: [DYGroupSettings] = []
     ) {
         self.chartViewBackgroundColor = chartViewBackgroundColor

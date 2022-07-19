@@ -17,6 +17,10 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
     public internal(set) var yAxisScalers: [YAxisScaler] = []
 
+    var marginSum: CGFloat {
+        return settings.lateralPadding.leading + settings.lateralPadding.trailing
+    }
+
     public init(
             dataPoints: [DYGroupedDataPoint],
             settings: DYMultiLineChartSettings,
@@ -79,6 +83,10 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                             }
 
                         }
+
+                        ZStack {
+                            xAxisGridLines()
+                        }
                     }
 
                 }
@@ -86,6 +94,44 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
         }
     }
 
+    private func xAxisGridLines()-> some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                Path { p in
+                    let totalWidth = geo.size.width - marginSum
+                    let totalHeight = geo.size.height
+                    var xPosition: CGFloat = self.settings.lateralPadding.leading
+                    let count = self.xAxisLineCount()
+                    let interval:Double = (settings.xAxisSettings as! DYLineChartXAxisSettings).xAxisInterval
+                    let xAxisMinMax = self.xAxisMinMax()
+                    let convertedXAxisInterval = totalWidth * CGFloat(interval / (xAxisMinMax.max - xAxisMinMax.min))
+                    for _ in 0..<count + 1 {
+                        p.move(to: CGPoint(x: xPosition, y: 0))
+                        p.addLine(to: CGPoint(x:xPosition, y: totalHeight))
+                        xPosition += convertedXAxisInterval
+                    }
+                }.stroke(style: (settings.xAxisSettings as! DYLineChartXAxisSettings).xAxisLineStrokeStyle)
+                        .foregroundColor(.secondary)
+            }
 
+
+        }
+    }
+
+    internal func xAxisLineCount()->Int {
+
+        let xAxisMinMax = self.xAxisMinMax()
+
+        let interval = xAxisMinMax.max - xAxisMinMax.min
+        let xAxisInterval = (self.settings.xAxisSettings as! DYLineChartXAxisSettings).xAxisInterval
+        // let count = interval / xAxisInterval
+        let count = 1000
+        return Int(count)
+    }
+
+    internal func xAxisMinMax()->(min: Double, max: Double){
+        let xValues = dataPoints.map({$0.xValue})
+        return (min: xValues.min() ?? 0, max: xValues.max() ?? 0)
+    }
 
 }

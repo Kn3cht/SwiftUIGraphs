@@ -47,7 +47,7 @@ public struct DYGroupedDataPoint: Identifiable {
         var endDate = Date().add(units: -3, component: .hour)
 
         for _ in 0..<20 {
-            let yValue = Int.random(in: 6000 ..< 12000)
+            let yValue = Int.random(in: 600 ..< 900)
 
             let xValue =  endDate.timeIntervalSinceReferenceDate
             let dataPoint = DYGroupedDataPoint(xValue: xValue, yValue: Double(yValue))
