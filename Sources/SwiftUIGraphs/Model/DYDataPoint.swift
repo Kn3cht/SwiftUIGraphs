@@ -15,14 +15,16 @@ public struct DYDataPoint: Identifiable {
     /// - Parameters:
     ///   - xValue: the x-value of the data point.
     ///   - yValue: the y-value of the data point.
-    public init(xValue: Double, yValue: Double) {
+    public init(xValue: Double, yValue: Double, group: String? = nil) {
         self.xValue = xValue
         self.yValue = yValue
+        self.group = group
     }
     
     public var xValue: Double
     public var yValue: Double
-    
+    public var group: String?
+
     /// example data: e.g. y-values are seconds.
     public static var exampleData0: [DYDataPoint] {
         var dataPoints:[DYDataPoint] = []
@@ -76,5 +78,24 @@ public struct DYDataPoint: Identifiable {
         }
 
         return dataPoints
+    }
+
+    public static var groupedExampleData: [DYDataPoint] {
+        let groupedData0 = exampleData0
+        let groupedData1 = exampleData1
+
+        var exampleData: [DYDataPoint] = []
+        groupedData0.forEach({ dp in
+            let dataPoint = DYDataPoint(xValue: dp.xValue, yValue: Double(dp.yValue), group: "group0")
+
+            exampleData.append(dataPoint)
+        })
+        groupedData1.forEach({ dp in
+            let dataPoint = DYDataPoint(xValue: dp.xValue, yValue: Double(dp.yValue), group: "group1")
+
+            exampleData.append(dataPoint)
+        })
+
+        return exampleData
     }
 }

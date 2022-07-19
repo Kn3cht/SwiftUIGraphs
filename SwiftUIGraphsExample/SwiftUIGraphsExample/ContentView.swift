@@ -21,7 +21,8 @@ struct ContentView: View {
                     Image(systemName: "waveform.path")
                     Text("Line Charts")
                 }) {
-                   // NavigationLink("Weight Lifting Volume per Workout", destination: BasicLineChartExample())
+                    NavigationLink("Weight Lifting Volume per Workout", destination: BasicLineChartExample())
+                    NavigationLink("Multi Line Chart Example", destination: MultiLineChartExample())
                     NavigationLink("Stock Prices (asyn data fetch)", destination: LineChartWithAsyncDataFetch())
                     NavigationLink("Workout Time per Week", destination: CustomYAxisIntervalExampleLineChart(), isActive: $linkActive)
                 }
