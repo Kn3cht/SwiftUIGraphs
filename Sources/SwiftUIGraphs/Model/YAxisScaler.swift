@@ -27,7 +27,8 @@
 
 import Foundation
 
-struct YAxisScaler {
+public struct YAxisScaler {
+    public var axisId: String?
     private var minPoint: Double
     private var maxPoint: Double
     private var maxTicks: Int
@@ -35,11 +36,12 @@ struct YAxisScaler {
     private(set) var scaledMin: Double?
     private(set) var scaledMax: Double?
     
-    init(min: Double, max: Double, maxTicks: Int) {
+    init(axisId: String? = nil, min: Double, max: Double, maxTicks: Int) {
         self.maxTicks = maxTicks
         self.minPoint = min
         self.maxPoint = max
         self.calculate()
+        self.axisId = axisId
     }
     
     func scaledValues() -> [Double] {

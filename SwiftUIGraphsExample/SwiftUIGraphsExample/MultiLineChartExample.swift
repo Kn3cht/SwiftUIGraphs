@@ -21,6 +21,9 @@ struct MultiLineChartExample: View {
                             yAxesSettings: [
                                 YAxisSettings(
                                         axisIdentifier: "axis0"
+                                ),
+                                YAxisSettings(
+                                        axisIdentifier: "axis1"
                                 )
                             ],
                             groupSettings: [
@@ -28,7 +31,12 @@ struct MultiLineChartExample: View {
                                     id: "group0",
                                     color: .blue,
                                         axisId: "axis0"
-                                )
+                                ),
+                                DYGroupSettings(
+                                    id: "group1",
+                                    color: .blue,
+                                        axisId: "axis1"
+                                ),
                             ]
                         )
                 )  // 604800 seconds per week
