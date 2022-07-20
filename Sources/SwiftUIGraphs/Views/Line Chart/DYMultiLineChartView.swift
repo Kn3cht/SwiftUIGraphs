@@ -18,6 +18,8 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
     var minX: Double
     var maxX: Double
 
+    var groupDataDictionary: [String: [DYGroupedDataPoint]] = [:]
+
     public internal(set) var yAxisScalers: [YAxisScaler] = []
 
     var marginSum: CGFloat {
@@ -64,6 +66,14 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
         self.minX = xValues.min() ?? 0
         self.maxX = xValues.max() ?? 0
+
+        // Create group dictionary
+        for dataPoint in dataPoints {
+            if let groupId = dataPoint.groupId {
+                let elements = groupDataDictionary[groupId] ?? []
+                groupDataDictionary[groupId] = elements + [dataPoint]
+            }
+        }
     }
 
     public var body: some View {
@@ -76,30 +86,121 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                         })
 
                         if let axisScaler = yAxisScaler {
-                            self.yAxisView(
-                                            geo: geo,
-                                            yAxisSettings: yAxisSettings,
-                                            yAxisScaler: axisScaler
-                                    )
-                                    .padding(.trailing, 5)
-                                    .frame(width: yAxisSettings.yAxisViewWidth)
-                            Divider()
+                            HStack {
+                                self.yAxisView(
+                                                geo: geo,
+                                                yAxisSettings: yAxisSettings,
+                                                yAxisScaler: axisScaler
+                                        )
+                                        .padding(.bottom, 20)
+                                        .frame(width: yAxisSettings.yAxisViewWidth, height: geo.size.height - 20)
+                            }
                         } else {
                             Text("Scaler not found")
                         }
                     }
 
+                    /*let axisWidthSum = settings.yAxesSettings.map { axis in
+                        axis.yAxisViewWidth
+                    }.reduce(0, +)*/
+
                     ScrollView(.horizontal) {
                         VStack {
                             Spacer()
-
+                            ZStack {
+                                lines()
+                                points()
+                            }
                             xAxisView()
                                     .frame(width: 3000, height: 20)
                         }
-                    }.frame(height: geo.size.height)
+                    }
+                            // .offset(x: axisWidthSum)
+                            .frame(height: geo.size.height)
                 }
             }
         }
+    }
+
+    private func points()->some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let height = geo.size.height
+            Group {
+                let keys = groupDataDictionary.map{$0.key}
+                ForEach(keys.indices) { index in
+                    let groupId = keys[index]
+                    let group = self.settings.groupSettings.first(where: { group in
+                        group.id == groupId
+                    })!
+                    let axisId = group.axisId
+                    let yAxisScaler = yAxisScalers.first(where: { scaler in
+                        scaler.axisId == axisId
+                    })!
+
+                    let yAxisSettings = self.settings.yAxesSettings.first(where: { axisSettings in
+                        axisSettings.axisIdentifier == axisId
+                    })!
+
+                    let values = groupDataDictionary[groupId] ?? []
+
+                    ForEach(values) { dataPoint in
+                        let xCoordinate = settings.lateralPadding.leading + self.convertToXCoordinate(value: dataPoint.xValue, width: width) - 5
+                        let yCoordinate = (height - self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoint.yValue, height: height)) - 5
+                        // let yCoordinate = CGFloat(100)
+                        Circle()
+                                // .stroke(style: strokeStylePerPoint?(dataPoint) ?? (self.settings as! DYLineChartSettings).pointStrokeStyle)
+                                .frame(width: 5, height: 5, alignment: .center)
+                                .foregroundColor(group.color)
+                                .background(group.color)
+                                .cornerRadius(5)
+                                .offset(x: xCoordinate, y: yCoordinate)
+
+                    }
+                }
+            }
+        }
+    }
+
+    private func lines() -> some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let height = geo.size.height
+            let keys = groupDataDictionary.map{$0.key}
+
+            ForEach(keys.indices) { index in
+                let groupId = keys[index]
+                let group = self.settings.groupSettings.first(where: { group in
+                    group.id == groupId
+                })!
+                let axisId = group.axisId
+                let yAxisScaler = yAxisScalers.first(where: { scaler in
+                    scaler.axisId == axisId
+                })!
+
+                let yAxisSettings = self.settings.yAxesSettings.first(where: { axisSettings in
+                    axisSettings.axisIdentifier == axisId
+                })!
+
+                let values = (groupDataDictionary[groupId] ?? []).sorted(by: { (dp1, dp2) in
+                    dp1.xValue < dp2.xValue
+                })
+
+                pathFor(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, dataPoints: values, width: width, height: height)
+                        .stroke(group.color, style: StrokeStyle(lineWidth: 1))
+            }
+
+        }
+    }
+
+    func convertToYCoordinate(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, value:Double, height: CGFloat)->CGFloat {
+
+        let yAxisMinMax = self.yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler)
+
+        let normalizationFactor = normalizationFactor(value: value, maxValue: yAxisMinMax.max, minValue: yAxisMinMax.min)
+        let yCoordinate = height * CGFloat(normalizationFactor)
+
+        return yCoordinate
     }
 
     private func xAxisGridLines()-> some View {
@@ -218,5 +319,41 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
     func normalizationFactor(value: Double, maxValue: Double, minValue: Double) -> Double {
         (value - minValue) / (maxValue - minValue)
+    }
+
+    private func connectPointsWith(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, dataPoints: [DYGroupedDataPoint], path: inout Path, index: Int, point0: CGPoint, height: CGFloat, width: CGFloat)->CGPoint {
+
+        let mappedYValue = self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoints[index].yValue, height: height)
+        let mappedXValue = self.convertToXCoordinate(value: dataPoints[index].xValue, width: width)
+        let point1 = CGPoint(x: settings.lateralPadding.leading + mappedXValue, y: height - mappedYValue)
+
+        path.addLine(to: point1)
+        return point1
+    }
+
+    func pathFor(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, dataPoints: [DYGroupedDataPoint], width: CGFloat, height: CGFloat)->Path {
+        Path { path in
+            path  = self.drawCompletePathWith(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, dataPoints: dataPoints, path: &path, height: height, width: width)
+        }
+    }
+
+    func drawCompletePathWith(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, dataPoints: [DYGroupedDataPoint], path: inout Path, height: CGFloat, width: CGFloat)->Path {
+
+        guard let firstYValue = dataPoints.first?.yValue else {return path}
+
+        let xCoordinate = convertToXCoordinate(value: dataPoints.first!.xValue, width: width)
+        var point0 = CGPoint(x: xCoordinate, y: height - self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: firstYValue, height: height))
+        path.move(to: point0)
+        var index:Int = 0
+
+        for _ in dataPoints {
+            if index != 0 {
+                point0 = self.connectPointsWith(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, dataPoints: dataPoints, path: &path, index: index, point0: point0, height: height, width: width)
+            }
+            index += 1
+
+        }
+
+        return path
     }
 }

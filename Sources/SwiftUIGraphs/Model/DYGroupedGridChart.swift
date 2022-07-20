@@ -22,7 +22,7 @@ extension DYGroupedGridChart {
                 Text(self.yValueConverter(maxValue)).font(.system(size: yAxisSettings.yAxisFontSize))
             }
             ForEach(self.yAxisValues(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler), id: \.self) {value in
-                if value != self.yAxisMinMax().max {
+                if value != self.yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler).max {
                     Spacer(minLength: 0)
                     Text(self.yValueConverter(value)).font(.system(size: yAxisSettings.yAxisFontSize))
                 }
@@ -43,7 +43,7 @@ extension DYGroupedGridChart {
         var values:[Double] = []
         let count = yAxisValueCount(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler)
         let yAxisInterval = interval
-        var currentValue  = yAxisMinMax().max
+        var currentValue  = yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler).max
 
         for _ in 0..<(count) {
             values.append(currentValue)
@@ -57,7 +57,7 @@ extension DYGroupedGridChart {
         guard let interval = yAxisSettings.yAxisIntervalOverride else {
             return yAxisScaler.scaledValues().count
         }
-        let yAxisMinMax = self.yAxisMinMax()
+        let yAxisMinMax = self.yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler)
         let yAxisInterval = interval
         let count = (yAxisMinMax.max - yAxisMinMax.min) / yAxisInterval
         //   print("line count \(count + 1)")
@@ -65,7 +65,12 @@ extension DYGroupedGridChart {
     }
 
 
-    func yAxisMinMax()->(min: Double, max: Double){
-        (min: 0, max: 1)
+
+    func yAxisMinMax(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler)->( min: Double, max: Double){
+
+        let scaledMin = yAxisSettings.yAxisMinMaxOverride?.min ?? yAxisScaler.scaledMin ?? 0
+        let scaledMax = yAxisSettings.yAxisMinMaxOverride?.max ?? yAxisScaler.scaledMax ?? 1
+
+        return (min: scaledMin, max: scaledMax)
     }
 }

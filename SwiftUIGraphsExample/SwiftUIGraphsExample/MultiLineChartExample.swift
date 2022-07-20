@@ -35,7 +35,7 @@ struct MultiLineChartExample: View {
                                 ),
                                 DYGroupSettings(
                                     id: "group1",
-                                    color: .blue,
+                                    color: .red,
                                         axisId: "axis1"
                                 ),
                             ]
@@ -49,6 +49,10 @@ struct MultiLineChartExample: View {
     var fontSize: CGFloat {
         UIDevice.current.userInterfaceIdiom == .phone ? 8 : 10
     }
+
+
+
+
 }
 
 struct MultiLineChartExample_Previews: PreviewProvider {
