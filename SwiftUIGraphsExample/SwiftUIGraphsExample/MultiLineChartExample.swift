@@ -20,13 +20,14 @@ struct MultiLineChartExample: View {
                             showAnimation: false,
                             yAxesSettings: [
                                 YAxisSettings(
-                                        axisIdentifier: "axis0"
+                                        axisIdentifier: "axis0",
+                                        axisName: "Temperature"
                                 ),
                                 YAxisSettings(
-                                        axisIdentifier: "axis1"
+                                        axisIdentifier: "axis1",
+                                        axisName: "BloodPressure"
                                 )
-                            ],
-                                xAxisSettings: DYLineChartXAxisSettings(showXAxis: true, xAxisInterval: 604800, xAxisFontSize: fontSize),
+                            ], xAxisSettings: DYLineChartXAxisSettings(showXAxis: true, xAxisInterval: 604800, xAxisFontSize: fontSize),
                             groupSettings: [
                                 DYGroupSettings(
                                     id: "group0",
@@ -39,7 +40,14 @@ struct MultiLineChartExample: View {
                                         axisId: "axis1"
                                 ),
                             ]
-                        )
+                        ),
+                        xValueConverter: { value in
+                            if #available(iOS 15.0, *) {
+                                return Date(timeIntervalSince1970: value).formatted(date: .long, time: .omitted)
+                            } else {
+                                return "ios15 required"
+                            }
+                        }
                 )  // 604800 seconds per week
                 Spacer()
             }.padding()

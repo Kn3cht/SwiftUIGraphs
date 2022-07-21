@@ -100,20 +100,32 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                         }
                     }
 
-                    /*let axisWidthSum = settings.yAxesSettings.map { axis in
-                        axis.yAxisViewWidth
-                    }.reduce(0, +)*/
-
                     ScrollView(.horizontal) {
                         VStack {
                             Spacer()
                             ZStack {
+                                ForEach(settings.yAxesSettings, id: \.axisIdentifier) { axisSettings in
+                                    let yAxisScaler = yAxisScalers.first(where: { yAxisScaler in
+                                        yAxisScaler.axisId == axisSettings.axisIdentifier
+                                    })
+
+                                    if let axisScaler = yAxisScaler {
+                                        yAxisGridLines(yAxisSettings: axisSettings, yAxisScaler: axisScaler)
+                                    } else {
+                                        Text("Scaler not found")
+                                    }
+
+                                }
+                                xAxisGridLines()
                                 lines()
                                 points()
                             }
+
                             xAxisView()
+                                    .padding(.horizontal)
                                     .frame(width: 3000, height: 20)
-                        }
+                        }.padding(.leading, 50)
+                                .padding(.trailing)
                     }
                             // .offset(x: axisWidthSum)
                             .frame(height: geo.size.height)
@@ -147,10 +159,8 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                     ForEach(values) { dataPoint in
                         let xCoordinate = settings.lateralPadding.leading + self.convertToXCoordinate(value: dataPoint.xValue, width: width) - 5
                         let yCoordinate = (height - self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoint.yValue, height: height)) - 5
-                        // let yCoordinate = CGFloat(100)
                         Circle()
-                                // .stroke(style: strokeStylePerPoint?(dataPoint) ?? (self.settings as! DYLineChartSettings).pointStrokeStyle)
-                                .frame(width: 5, height: 5, alignment: .center)
+                                .frame(width: 10, height: 10, alignment: .center)
                                 .foregroundColor(group.color)
                                 .background(group.color)
                                 .cornerRadius(5)
@@ -223,6 +233,38 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                         .foregroundColor(.secondary)
             }
 
+
+        }
+    }
+
+    func yAxisGridLines(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler) -> some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                let width = geo.size.width
+                Path { p in
+
+                    var yPosition:CGFloat = 0
+
+                    let count = self.yAxisValueCount(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler)
+                    let yAxisInterval = yAxisSettings.yAxisIntervalOverride ?? yAxisScaler.tickSpacing ?? 1
+
+                    let min = self.yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler).min
+                    let max = self.yAxisMinMax(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler).max
+                    let convertedYAxisInterval  = geo.size.height * CGFloat(yAxisInterval / (max - min))
+
+                    for _ in 0..<count    {
+
+                        p.move(to: CGPoint(x: 0, y: yPosition))
+                        p.addLine(to: CGPoint(x: width, y: yPosition))
+                        p.closeSubpath()
+                        yPosition += convertedYAxisInterval
+                    }
+
+
+                }.stroke(style: yAxisSettings.yAxisGridLinesStrokeStyle)
+                        .foregroundColor(.secondary)
+
+            }
 
         }
     }

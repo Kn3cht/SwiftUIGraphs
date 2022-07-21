@@ -17,6 +17,9 @@ protocol DYGroupedGridChart: View {
 extension DYGroupedGridChart {
     func yAxisView(geo: GeometryProxy, yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler)-> some View {
         VStack(alignment: .trailing, spacing: 0) {
+            if let axisName = yAxisSettings.axisName {
+                Text(axisName).font(.system(size: yAxisSettings.yAxisFontSize))
+            }
             let interval = yAxisScaler.tickSpacing ?? yAxisSettings.yAxisIntervalOverride ?? 0
             if let maxValue = self.yAxisValues(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler).first, maxValue >=  interval {
                 Text(self.yValueConverter(maxValue)).font(.system(size: yAxisSettings.yAxisFontSize))

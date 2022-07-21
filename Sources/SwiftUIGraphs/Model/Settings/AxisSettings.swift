@@ -85,6 +85,7 @@ public protocol XAxisSettings {
 public struct YAxisSettings {
     
     var axisIdentifier: String?
+    var axisName: String?
     var showYAxis: Bool
     var yAxisPosition: Edge.Set
     var yAxisViewWidth: CGFloat
@@ -122,9 +123,10 @@ public struct YAxisSettings {
     ///   - yAxisIntervalOverride: override the interval of the y-axis values. If not set, the interval will be calculated automatically.
     public init(
             axisIdentifier: String? = nil,
+            axisName: String? = nil,
             showYAxis: Bool = true,
             yAxisPosition: Edge.Set = .leading,
-            yAxisViewWidth: CGFloat = 35,
+            yAxisViewWidth: CGFloat = 55,
             showYAxisGridLines: Bool = true,
             yAxisGridLineStrokeStyle: StrokeStyle = StrokeStyle(lineWidth: 1, dash: [3]),
             showYAxisDataPointLines: Bool = false,
@@ -137,6 +139,7 @@ public struct YAxisSettings {
             yAxisIntervalOverride: Double? = nil
     ) {
         self.axisIdentifier = axisIdentifier
+        self.axisName = axisName
         self.showYAxis = showYAxis
         self.yAxisPosition = yAxisPosition
         self.yAxisViewWidth = yAxisViewWidth
