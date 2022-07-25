@@ -28,7 +28,7 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
     public internal(set) var yAxisScalers: [YAxisScaler] = []
 
-    @State private var lineOffset: CGFloat = 0 // Vertical line offset
+    @State private var lineOffset: CGFloat = 1000 // Vertical line offset
     @State private var lineOffsetOld: CGFloat = 0 // Vertical line offset
     @State private var isSelected: Bool = false // Is the user touching the graph
 
@@ -132,7 +132,6 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                                         } else {
                                             Text("Scaler not found")
                                         }
-
                                     }
                                     xAxisGridLines()
 
@@ -140,18 +139,16 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
                                     lines()
                                     points()
-
                                 }
 
                                 xAxisView()
                                         .padding(.horizontal)
                                         .frame(width: 3000, height: 20)
                             }
-                                .padding(.leading, 50)
-                                .padding(.trailing)
+                                    .padding(.leading, 50)
+                                    .padding(.trailing)
+                        }
                     }
-                    }
-                            // .offset(x: axisWidthSum)
                             .frame(height: geo.size.height)
                 }
             }
@@ -202,9 +199,10 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                                     .cornerRadius(7.5)
                                     .offset(x: xCoordinate, y: yCoordinate)
                                     .onTapGesture {
-                                        // self.lineOffset = xCoordinate
-                                        // self.lineOffsetOld = lineOffset
-                                        dragOnChanged(value: xCoordinate, width: geo.size.width)
+                                        pointOnTap(xPosition: xCoordinate, width: geo.size.width)
+                                        // dragOnChanged(value: lineOffsetOld + xCoordinate, width: geo.size.width)
+                                        // self.lineOffsetOld = self.lineOffset
+                                        // dragOnEnded(value: xCoordinate, geo: geo)
                                     }
                         }
                     }
@@ -450,8 +448,6 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                         .fill(Color.white.opacity(1))
                         .shadow(color: .black, radius: 5)
                         .overlay(RoundedRectangle(cornerRadius: 25).stroke(lineWidth: 1).foregroundColor(.white).padding(.vertical))
-
-
                 HStack {
                     Spacer()
                     VStack {
@@ -479,7 +475,6 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                             }.padding(.bottom)
                         }
                         Spacer()
-
                     }
                     Spacer()
                 }.padding()
@@ -493,13 +488,37 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                                         dragOnChanged(value: dragValue.translation.width, width: geo.size.width)
                                     }
                                     .onEnded { dragValue in
-                                        dragOnEnded(value: dragValue, geo: geo)
+                                        dragOnEnded(value: dragValue.translation.width, geo: geo)
                                     }
                     )
                     .onAppear {
                         self.lineOffset = self.settings.lateralPadding.leading
                     }
         }
+    }
+
+    private func pointOnTap(xPosition: CGFloat, width: CGFloat) {
+        self.isSelected = true
+        self.lineOffset = xPosition
+        self.lineOffsetOld = lineOffset
+        self.pointsInArea = findPointsInArea(xPosition: lineOffset, width: width)
+
+        var groupedPointsInArea: [String: [DYGroupedDataPoint]] = [:]
+        for pointInArea in pointsInArea {
+            var groupedPoints = groupedPointsInArea[pointInArea.groupId!] ?? []
+            groupedPoints.append(pointInArea)
+            groupedPointsInArea[pointInArea.groupId!] = groupedPoints
+        }
+
+        var closesPoints: [DYGroupedDataPoint] = []
+        for key in groupedPointsInArea.keys {
+            let groupedPoints = groupedPointsInArea[key] ?? []
+            // print("grouped points", groupedPoints.count)
+            if let closesPointPerGroup = findClosestPointTo(xPosition: lineOffset, width: width, dataPoints: groupedPoints) {
+                closesPoints.append(closesPointPerGroup)
+            }
+        }
+        self.closesPointsPerGroup = closesPoints
     }
 
     private func dragOnChanged(value: CGFloat, width: CGFloat) {
@@ -533,9 +552,9 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
         })?.dataPoint
     }
 
-    private func dragOnEnded(value: DragGesture.Value, geo: GeometryProxy) {
+    private func dragOnEnded(value: CGFloat, geo: GeometryProxy) {
         self.isSelected = false
-        self.lineOffsetOld = lineOffsetOld + value.translation.width
+        self.lineOffsetOld = lineOffsetOld + value
     }
 
     private func scrollOnEnded(value: DragGesture.Value, geo: GeometryProxy) {
