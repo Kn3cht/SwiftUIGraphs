@@ -18,9 +18,22 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
     var minX: Double
     var maxX: Double
 
+    let indicatorLineWidth = CGFloat(200)
+
+    var epsilonArea: CGFloat {
+        indicatorLineWidth / 2
+    }
+
     var groupDataDictionary: [String: [DYGroupedDataPoint]] = [:]
 
     public internal(set) var yAxisScalers: [YAxisScaler] = []
+
+    @State private var lineOffset: CGFloat = 0 // Vertical line offset
+    @State private var lineOffsetOld: CGFloat = 0 // Vertical line offset
+    @State private var isSelected: Bool = false // Is the user touching the graph
+
+    @State private var pointsInArea: [DYGroupedDataPoint] = []
+    @State private var closesPointsPerGroup: [DYGroupedDataPoint] = []
 
     var marginSum: CGFloat {
         return settings.lateralPadding.leading + settings.lateralPadding.trailing
@@ -100,32 +113,43 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                         }
                     }
 
-                    ScrollView(.horizontal) {
-                        VStack {
-                            Spacer()
-                            ZStack {
-                                ForEach(settings.yAxesSettings, id: \.axisIdentifier) { axisSettings in
-                                    let yAxisScaler = yAxisScalers.first(where: { yAxisScaler in
-                                        yAxisScaler.axisId == axisSettings.axisIdentifier
-                                    })
+                    ScrollView(axes: [.horizontal], showsIndicators: false,
+                            offsetChanged: { offset in
+                                // self.lineOffset = lineOffsetOld + convertToXCoordinate(value: $0.x, width: geo.size.width)
+                                // self.lineOffset = offset.x
+                            }) {
+                        ScrollViewReader { scrollValue in
+                            VStack {
+                                Spacer()
+                                ZStack {
+                                    ForEach(settings.yAxesSettings, id: \.axisIdentifier) { axisSettings in
+                                        let yAxisScaler = yAxisScalers.first(where: { yAxisScaler in
+                                            yAxisScaler.axisId == axisSettings.axisIdentifier
+                                        })
 
-                                    if let axisScaler = yAxisScaler {
-                                        yAxisGridLines(yAxisSettings: axisSettings, yAxisScaler: axisScaler)
-                                    } else {
-                                        Text("Scaler not found")
+                                        if let axisScaler = yAxisScaler {
+                                            yAxisGridLines(yAxisSettings: axisSettings, yAxisScaler: axisScaler)
+                                        } else {
+                                            Text("Scaler not found")
+                                        }
+
                                     }
+                                    xAxisGridLines()
+
+                                    addUserInteraction()
+
+                                    lines()
+                                    points()
 
                                 }
-                                xAxisGridLines()
-                                lines()
-                                points()
-                            }
 
-                            xAxisView()
-                                    .padding(.horizontal)
-                                    .frame(width: 3000, height: 20)
-                        }.padding(.leading, 50)
+                                xAxisView()
+                                        .padding(.horizontal)
+                                        .frame(width: 3000, height: 20)
+                            }
+                                .padding(.leading, 50)
                                 .padding(.trailing)
+                    }
                     }
                             // .offset(x: axisWidthSum)
                             .frame(height: geo.size.height)
@@ -159,13 +183,30 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                     ForEach(values) { dataPoint in
                         let xCoordinate = settings.lateralPadding.leading + self.convertToXCoordinate(value: dataPoint.xValue, width: width) - 5
                         let yCoordinate = (height - self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoint.yValue, height: height)) - 5
-                        Circle()
-                                .frame(width: 10, height: 10, alignment: .center)
-                                .foregroundColor(group.color)
-                                .background(group.color)
-                                .cornerRadius(5)
-                                .offset(x: xCoordinate, y: yCoordinate)
+                        ZStack {
+                            if self.closesPointsPerGroup.contains(where: { pIA in
+                                pIA.id == dataPoint.id
+                            }) {
+                                Circle()
+                                        .frame(width: 25, height: 25, alignment: .center)
+                                        .foregroundColor(Color.black.opacity(0.2))
+                                        .background(Color.black.opacity(0.2))
+                                        .cornerRadius(12.5)
+                                        .offset(x: xCoordinate, y: yCoordinate)
+                            }
 
+                            Circle()
+                                    .frame(width: 15, height: 15, alignment: .center)
+                                    .foregroundColor(group.color)
+                                    .background(group.color)
+                                    .cornerRadius(7.5)
+                                    .offset(x: xCoordinate, y: yCoordinate)
+                                    .onTapGesture {
+                                        // self.lineOffset = xCoordinate
+                                        // self.lineOffsetOld = lineOffset
+                                        dragOnChanged(value: xCoordinate, width: geo.size.width)
+                                    }
+                        }
                     }
                 }
             }
@@ -365,8 +406,8 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
     private func connectPointsWith(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, dataPoints: [DYGroupedDataPoint], path: inout Path, index: Int, point0: CGPoint, height: CGFloat, width: CGFloat)->CGPoint {
 
-        let mappedYValue = self.convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoints[index].yValue, height: height)
-        let mappedXValue = self.convertToXCoordinate(value: dataPoints[index].xValue, width: width)
+        let mappedYValue = convertToYCoordinate(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, value: dataPoints[index].yValue, height: height)
+        let mappedXValue = convertToXCoordinate(value: dataPoints[index].xValue, width: width)
         let point1 = CGPoint(x: settings.lateralPadding.leading + mappedXValue, y: height - mappedYValue)
 
         path.addLine(to: point1)
@@ -375,7 +416,7 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
 
     func pathFor(yAxisSettings: YAxisSettings, yAxisScaler: YAxisScaler, dataPoints: [DYGroupedDataPoint], width: CGFloat, height: CGFloat)->Path {
         Path { path in
-            path  = self.drawCompletePathWith(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, dataPoints: dataPoints, path: &path, height: height, width: width)
+            path  = drawCompletePathWith(yAxisSettings: yAxisSettings, yAxisScaler: yAxisScaler, dataPoints: dataPoints, path: &path, height: height, width: width)
         }
     }
 
@@ -397,5 +438,130 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
         }
 
         return path
+    }
+
+    private func addUserInteraction() -> some View {
+        GeometryReader { geo in
+
+            let height = geo.size.height
+
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 25)
+                        .fill(Color.white.opacity(1))
+                        .shadow(color: .black, radius: 10)
+                        .overlay(RoundedRectangle(cornerRadius: 25).stroke(lineWidth: 1).foregroundColor(.white).padding(.vertical))
+
+
+                HStack {
+                    Spacer()
+                    VStack {
+                        ForEach(settings.yAxesSettings, id: \.axisIdentifier) { axisSetting in
+                            VStack {
+                                Text(axisSetting.axisName!)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                let groupId = settings.groupSettings.first(where: { groupSettings in
+                                            groupSettings.axisId == axisSetting.axisIdentifier
+                                        })!
+                                        .id
+
+                                if let dataPointForGroup = closesPointsPerGroup.first(where: { dp in
+                                    dp.groupId == groupId
+                                }) {
+                                    Text("\(dataPointForGroup.yValue)")
+                                            .font(.title2)
+                                            .bold()
+                                } else {
+                                    Text("--")
+                                            .font(.title2)
+                                            .bold()
+                                }
+                            }.padding(.bottom)
+
+                            /*if let groupDataPointValue = closesPointsPerGroup.first(where: { dp in
+                                dp.groupId == groupId
+                            })?.yValue {
+                                Text(groupDataPointValue)
+                                        .font(.title2)
+                            } else {
+                                Text("--")
+                                        .font(.title2)
+                            }*/
+                        }
+                        Spacer()
+
+                    }
+                    Spacer()
+                }.padding()
+
+            }
+                    .frame(width: indicatorLineWidth, height: height)
+                    .offset(x: lineOffset - epsilonArea)
+                    .gesture(
+                            DragGesture(minimumDistance: 0)
+                                    .onChanged { dragValue in
+                                        dragOnChanged(value: dragValue.translation.width, width: geo.size.width)
+                                    }
+                                    .onEnded { dragValue in
+                                        dragOnEnded(value: dragValue, geo: geo)
+                                    }
+                    )
+                    .onAppear {
+                        self.lineOffset = self.settings.lateralPadding.leading
+                    }
+        }
+    }
+
+    private func dragOnChanged(value: CGFloat, width: CGFloat) {
+        self.isSelected = true
+        self.lineOffset = lineOffsetOld + value
+        self.pointsInArea = findPointsInArea(xPosition: lineOffset, width: width)
+
+        var groupedPointsInArea: [String: [DYGroupedDataPoint]] = [:]
+        for pointInArea in pointsInArea {
+            var groupedPoints = groupedPointsInArea[pointInArea.groupId!] ?? []
+            groupedPoints.append(pointInArea)
+            groupedPointsInArea[pointInArea.groupId!] = groupedPoints
+        }
+
+        var closesPoints: [DYGroupedDataPoint] = []
+        for key in groupedPointsInArea.keys {
+            let groupedPoints = groupedPointsInArea[key] ?? []
+            // print("grouped points", groupedPoints.count)
+            if let closesPointPerGroup = findClosestPointTo(xPosition: lineOffset, width: width, dataPoints: groupedPoints) {
+                closesPoints.append(closesPointPerGroup)
+            }
+        }
+        self.closesPointsPerGroup = closesPoints
+    }
+
+    private func findClosestPointTo(xPosition: CGFloat, width: CGFloat, dataPoints: [DYGroupedDataPoint]) -> DYGroupedDataPoint? {
+        dataPoints.compactMap { dp in
+                    (dataPoint: dp, diff: abs(convertToXCoordinate(value: dp.xValue, width: width) - xPosition))
+        }.min(by: { dp1, dp2 in
+                    dp1.diff < dp2.diff
+        })?.dataPoint
+    }
+
+    private func dragOnEnded(value: DragGesture.Value, geo: GeometryProxy) {
+        self.isSelected = false
+        self.lineOffsetOld = lineOffsetOld + value.translation.width
+    }
+
+    private func scrollOnEnded(value: DragGesture.Value, geo: GeometryProxy) {
+        self.isSelected = false
+        self.lineOffset = lineOffsetOld + value.translation.width
+        self.lineOffsetOld = lineOffsetOld + value.translation.width
+    }
+
+    private func findPointsInArea(xPosition: CGFloat, width: CGFloat) -> [DYGroupedDataPoint] {
+        dataPoints.filter { dp in
+            let xCoordinate = convertToXCoordinate(value: dp.xValue, width: width)
+
+            let lowerBound = xPosition - epsilonArea
+            let upperBound = xPosition + epsilonArea
+
+            return xCoordinate > lowerBound && xCoordinate < upperBound
+        }
     }
 }

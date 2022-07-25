@@ -6,7 +6,6 @@ import SwiftUI
 import SwiftUIGraphs
 
 struct MultiLineChartExample: View {
-    @State private var selectedDataIndex: Int = 0
 
     var body: some View {
         let groupedExampleData = DYGroupedDataPoint.groupedExampleData

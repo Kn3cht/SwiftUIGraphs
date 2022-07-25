@@ -107,6 +107,7 @@ public struct YAxisSettings {
     /// YAxisSettings
     /// - Parameters:
     ///   - axisIdentifier: optional identifier for y axes used to be referenced to in multi line charts
+    ///   - axisName: optional name for the y axis
     ///   - showYAxis: determines if the y-axis should be shown.
     ///   - yAxisPosition: y-axis position. can be leading or trailing.
     ///   - yAxisViewWidth: width of the y-axis view. Adjust if the y-axis labels don't fit.
