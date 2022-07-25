@@ -448,7 +448,7 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 25)
                         .fill(Color.white.opacity(1))
-                        .shadow(color: .black, radius: 10)
+                        .shadow(color: .black, radius: 5)
                         .overlay(RoundedRectangle(cornerRadius: 25).stroke(lineWidth: 1).foregroundColor(.white).padding(.vertical))
 
 
@@ -477,16 +477,6 @@ public struct DYMultiLineChartView: View, DYGroupedGridChart {
                                             .bold()
                                 }
                             }.padding(.bottom)
-
-                            /*if let groupDataPointValue = closesPointsPerGroup.first(where: { dp in
-                                dp.groupId == groupId
-                            })?.yValue {
-                                Text(groupDataPointValue)
-                                        .font(.title2)
-                            } else {
-                                Text("--")
-                                        .font(.title2)
-                            }*/
                         }
                         Spacer()
 
